@@ -75,9 +75,20 @@ address predicted = Clones2WithImmutableArgs.addressOfClone2(
 ```
 
 The implementation contract reads its appended args via
-`calldataload`. The original wighawag `Clone.sol` provides
+`calldataload`. Inherit from the bundled `Clone` contract:
+
+```solidity
+import {Clone} from "clone/src/Clone.sol";
+
+contract MyImpl is Clone {
+    function strike() external pure returns (uint256) { return _getArgUint256(0); }
+    function collateral() external pure returns (address) { return _getArgAddress(32); }
+}
+```
+
+`Clone.sol` is byte-identical to upstream wighawag — it provides
 `_getArgUint256` / `_getArgAddress` / `_getArgUint64` / `_getArgUint8`
-helpers — copy it from the upstream repo or write your own.
+helpers.
 
 ## Limits
 
