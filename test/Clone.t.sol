@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import { Test } from "forge-std/Test.sol";
 import { ClonesWithImmutableArgs } from "../src/ClonesWithImmutableArgs.sol";
-import { Clones2WithImmutableArgs } from "../src/Clones2WithImmutableArgs.sol";
 import { Clone } from "../src/Clone.sol";
 
 /// @dev Implementation contract exposed via clones. Reads the appended
@@ -42,7 +41,7 @@ contract CloneTest is Test {
     }
 
     function callClone2(address i, bytes32 s, bytes calldata d) external returns (address payable) {
-        return Clones2WithImmutableArgs.clone2(i, s, d);
+        return ClonesWithImmutableArgs.clone2(i, s, d);
     }
 
     // --- ClonesWithImmutableArgs.clone --------------------------------------
@@ -100,22 +99,27 @@ contract CloneTest is Test {
         assertEq(suffix, data.length, "length suffix");
     }
 
-    // --- Clones2WithImmutableArgs.clone2 ------------------------------------
+    // --- ClonesWithImmutableArgs.clone2 ------------------------------------
 
     function test_clone2_predictionMatchesDeployment() public {
         bytes memory data = abi.encodePacked(uint256(42), address(impl));
         bytes32 salt = keccak256("test-salt");
 
-        address predicted =
-            Clones2WithImmutableArgs.addressOfClone2(address(this), address(impl), salt, data);
-        address payable actual = Clones2WithImmutableArgs.clone2(address(impl), salt, data);
+        // CREATE2 prediction via the public `creation` helper; mirrors the
+        // (commented-out) `addressOfClone2` but keeps it out of audited library code.
+        bytes32 bytecodeHash = keccak256(ClonesWithImmutableArgs.creation(address(impl), data));
+        address predicted = address(
+            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash))))
+        );
+
+        address payable actual = ClonesWithImmutableArgs.clone2(address(impl), salt, data);
         assertEq(predicted, actual);
     }
 
     function test_clone2_differentSaltDifferentAddress() public {
         bytes memory data = abi.encodePacked(uint256(42));
-        address payable a = Clones2WithImmutableArgs.clone2(address(impl), bytes32(uint256(1)), data);
-        address payable b = Clones2WithImmutableArgs.clone2(address(impl), bytes32(uint256(2)), data);
+        address payable a = ClonesWithImmutableArgs.clone2(address(impl), bytes32(uint256(1)), data);
+        address payable b = ClonesWithImmutableArgs.clone2(address(impl), bytes32(uint256(2)), data);
         assertTrue(a != b);
     }
 
@@ -123,8 +127,8 @@ contract CloneTest is Test {
         bytes memory data = abi.encodePacked(uint256(42));
         bytes32 salt = keccak256("dup");
 
-        Clones2WithImmutableArgs.clone2(address(impl), salt, data);
-        vm.expectRevert(Clones2WithImmutableArgs.CreateFail.selector);
+        ClonesWithImmutableArgs.clone2(address(impl), salt, data);
+        vm.expectRevert(ClonesWithImmutableArgs.CreateFail.selector);
         this.callClone2(address(impl), salt, data);
     }
 
@@ -132,18 +136,18 @@ contract CloneTest is Test {
         uint256 v = 0xCAFEBABE;
         bytes memory data = abi.encodePacked(v);
 
-        address payable c = Clones2WithImmutableArgs.clone2(address(impl), keccak256("k"), data);
+        address payable c = ClonesWithImmutableArgs.clone2(address(impl), keccak256("k"), data);
         assertEq(Impl(c).argUint256(0), v);
     }
 
     function test_clone2_revertsOnZeroImpl() public {
-        vm.expectRevert(Clones2WithImmutableArgs.ZeroImplementation.selector);
+        vm.expectRevert(ClonesWithImmutableArgs.ZeroImplementation.selector);
         this.callClone2(address(0), bytes32(0), "");
     }
 
     function test_clone2_revertsOnDataTooLong() public {
-        bytes memory tooLong = new bytes(Clones2WithImmutableArgs.MAX_DATA_LENGTH + 1);
-        vm.expectRevert(Clones2WithImmutableArgs.DataTooLong.selector);
+        bytes memory tooLong = new bytes(ClonesWithImmutableArgs.MAX_DATA_LENGTH + 1);
+        vm.expectRevert(ClonesWithImmutableArgs.DataTooLong.selector);
         this.callClone2(address(impl), bytes32(0), tooLong);
     }
 
@@ -156,7 +160,7 @@ contract CloneTest is Test {
         bytes memory data = abi.encodePacked(uint256(0xABCDEF), address(impl), uint64(99));
 
         address payable c1 = ClonesWithImmutableArgs.clone(address(impl), data);
-        address payable c2 = Clones2WithImmutableArgs.clone2(address(impl), keccak256("x"), data);
+        address payable c2 = ClonesWithImmutableArgs.clone2(address(impl), keccak256("x"), data);
 
         assertEq(c1.code, c2.code, "runtime mismatch");
     }

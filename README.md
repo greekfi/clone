@@ -1,15 +1,16 @@
 # clone
 
-Two small Solidity libraries for deploying minimal-proxy clones with
+A small Solidity library for deploying minimal-proxy clones with
 immutable args appended to the proxy runtime and forwarded to the
 implementation's calldata on every `DELEGATECALL`.
 
-- **`ClonesWithImmutableArgs`** — plain `CREATE` deploy.
-- **`Clones2WithImmutableArgs`** — `CREATE2` deploy + deterministic
-  address prediction.
+- **`ClonesWithImmutableArgs.clone`** — plain `CREATE` deploy.
+- **`ClonesWithImmutableArgs.clone2` / `addressOfClone2`** — `CREATE2`
+  deploy + deterministic address prediction.
 
-Both produce the same proxy runtime, so the same on-implementation reader
-works for either (the original wighawag `Clone.sol` is the canonical reader).
+Both paths produce the same proxy runtime, so the same on-implementation
+reader works for either (the original wighawag `Clone.sol` is the canonical
+reader).
 
 ## Origin
 
@@ -20,8 +21,8 @@ production at Bunni, Sudoswap, 0xSplits, etc.
 
 ## What this fork changes
 
-- **Split into two libraries**, one per deploy opcode. Each is a clean
-  single-purpose import.
+- **`CREATE` and `CREATE2` paths in one library** sharing a single
+  creation-bytecode builder.
 - **`uint16(runSize)` truncation bug fixed.** Upstream advertised
   `MAX_DATA_LENGTH = 65533`, but values above 24519 cause silent
   truncation of the runtime-size field in the creation prelude. The new
@@ -46,7 +47,6 @@ forge install greekfi/clone
 
 ```solidity
 import {ClonesWithImmutableArgs} from "clone/src/ClonesWithImmutableArgs.sol";
-import {Clones2WithImmutableArgs} from "clone/src/Clones2WithImmutableArgs.sol";
 ```
 
 Add to `remappings.txt`:
@@ -66,10 +66,10 @@ address payable instance = ClonesWithImmutableArgs.clone(
 
 // CREATE2 with caller-namespaced salt to prevent griefing
 bytes32 salt = keccak256(abi.encode(msg.sender, userSalt));
-address payable det = Clones2WithImmutableArgs.clone2(implementation, salt, data);
+address payable det = ClonesWithImmutableArgs.clone2(implementation, salt, data);
 
 // Predict the address without deploying
-address predicted = Clones2WithImmutableArgs.addressOfClone2(
+address predicted = ClonesWithImmutableArgs.addressOfClone2(
     address(this), implementation, salt, data
 );
 ```

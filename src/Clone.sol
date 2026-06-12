@@ -6,7 +6,7 @@ pragma solidity ^0.8.4;
 /// @notice Provides helper functions for reading immutable args from calldata.
 /// @dev    Byte-identical to upstream wighawag/clones-with-immutable-args at
 ///         commit 196f1ec. Designed to be inherited by implementations that
-///         are cloned via `ClonesWithImmutableArgs` or `Clones2WithImmutableArgs`.
+///         are cloned via `ClonesWithImmutableArgs` (`clone` or `clone2`).
 contract Clone {
     /// @notice Reads an immutable arg with type address
     /// @param argOffset The offset of the arg in the packed data
