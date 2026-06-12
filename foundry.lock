@@ -1,8 +1,20 @@
 {
+  "lib/clones-with-immutable-args": {
+    "tag": {
+      "name": "v1.0.0",
+      "rev": "5950723ffcfa047f13262e5dbd7218b54360c42e"
+    }
+  },
   "lib/forge-std": {
     "tag": {
       "name": "v1.16.1",
       "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"
+    }
+  },
+  "lib/solady": {
+    "tag": {
+      "name": "v0.1.26",
+      "rev": "acd959aa4bd04720d640bf4e6a5c71037510cc4b"
     }
   }
 }

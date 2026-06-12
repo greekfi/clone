@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import { Test } from "forge-std/Test.sol";
-import { ClonesWithImmutableArgs } from "../src/ClonesWithImmutableArgs.sol";
-import { Clone } from "../src/Clone.sol";
+import {Test} from "forge-std/Test.sol";
+import {ClonesWithImmutableArgs} from "../src/ClonesWithImmutableArgs.sol";
+import {Clone} from "../src/Clone.sol";
 
 /// @dev Implementation contract exposed via clones. Reads the appended
 ///      args back through `Clone._getArg*` helpers so the tests verify the
@@ -108,9 +108,8 @@ contract CloneTest is Test {
         // CREATE2 prediction via the public `creation` helper; mirrors the
         // (commented-out) `addressOfClone2` but keeps it out of audited library code.
         bytes32 bytecodeHash = keccak256(ClonesWithImmutableArgs.creation(address(impl), data));
-        address predicted = address(
-            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash))))
-        );
+        address predicted =
+            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash)))));
 
         address payable actual = ClonesWithImmutableArgs.clone2(address(impl), salt, data);
         assertEq(predicted, actual);

@@ -44,10 +44,7 @@ library ClonesWithImmutableArgs {
 
     /// @notice Deploys a CREATE2 clone of `implementation` with `data` baked
     ///         in. Reverts if the resulting address is already occupied.
-    function clone2(address implementation, bytes32 salt, bytes memory data)
-        internal
-        returns (address payable instance)
-    {
+    function clone2(address implementation, bytes32 salt, bytes memory data) internal returns (address payable instance) {
         bytes memory bytecode = creation(implementation, data);
         assembly ("memory-safe") {
             instance := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
