@@ -24,12 +24,12 @@ library ClonesWithImmutableArgs {
     error DataTooLong();
     error ZeroImplementation();
 
-    /// @notice Max length of the appended immutable args. Derived from EIP-170
-    ///         (24576-byte runtime cap) minus the 55-byte proxy logic and the
-    ///         2-byte length suffix: 24576 - 55 - 2 = 24519. Above this the
-    ///         runtime size overflows `uint16(runSize)` in the creation prelude
-    ///         and would silently deploy a truncated, broken proxy on chains
-    ///         that ever raise EIP-170.
+    /// @notice Max length of the appended immutable args. Derived from the
+    ///         EIP-170 runtime code-size limit (24576 bytes) minus the 55-byte
+    ///         proxy runtime and the 2-byte length suffix: 24576 - 55 - 2 =
+    ///         24519. `creation` reliably rejects any `data.length` above this
+    ///         cap with `DataTooLong()` before deployment, so the resulting
+    ///         runtime never exceeds the EIP-170 limit.
     uint256 internal constant MAX_DATA_LENGTH = 24519;
 
     /// @notice Deploys a clone of `implementation` with `data` baked into its
