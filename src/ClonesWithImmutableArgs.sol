@@ -70,8 +70,20 @@ library ClonesWithImmutableArgs {
     ///     }
 
     /// @notice Builds the creation bytecode shared by `clone` and `clone2`.
-    ///         Public so off-chain callers / tests can derive the CREATE2 address
-    ///         without re-implementing the byte layout.
+    ///         `internal`, so solc inlines it into every importing contract and
+    ///         the library stays a pure compile-time dependency — nothing is
+    ///         deployed and nothing is linked. Consumers that want to expose the
+    ///         init code (or its hash) to off-chain callers wrap it in their own
+    ///         public view function; e.g. `Factory.receiptInitCodeHash`.
+    /// @dev    MUST STAY `internal`. Declaring this (or any other function here)
+    ///         `public` / `external` turns the library into a separately deployed,
+    ///         link-time dependency, and every call to it into a DELEGATECALL that
+    ///         executes in the CALLER's storage context. A wrong or hostile link
+    ///         target would then hold unrestricted write access to the consumer's
+    ///         storage, reachable through any function that touches this builder —
+    ///         including `view` ones, which an external caller is free to reach
+    ///         with a plain CALL. Upstream wighawag is all-`internal` for the same
+    ///         reason.
     ///      Layout:
     ///        creation prelude (10):  61 <runSize> 3d 81 60 0a 3d 39 f3
     ///        runtime (55 + extraLength):
@@ -84,7 +96,7 @@ library ClonesWithImmutableArgs {
     ///      `extraLength = data.length + 2`; the 2-byte length suffix at the end
     ///      of the runtime tells `Clone._getImmutableArgsOffset` how far back to
     ///      seek from calldatasize.
-    function creation(address implementation, bytes memory data) public pure returns (bytes memory) {
+    function creation(address implementation, bytes memory data) internal pure returns (bytes memory) {
         if (implementation == address(0)) revert ZeroImplementation();
         if (data.length > MAX_DATA_LENGTH) revert DataTooLong();
 
