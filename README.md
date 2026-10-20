@@ -5,8 +5,11 @@ immutable args appended to the proxy runtime and forwarded to the
 implementation's calldata on every `DELEGATECALL`.
 
 - **`ClonesWithImmutableArgs.clone`** — plain `CREATE` deploy.
-- **`ClonesWithImmutableArgs.clone2` / `addressOfClone2`** — `CREATE2`
-  deploy + deterministic address prediction.
+- **`ClonesWithImmutableArgs.clone2`** — deterministic `CREATE2` deploy.
+  The library does not ship an on-chain address-prediction function;
+  consumers predict the address off-chain (or in their own code) from
+  the reference `addressOfClone2` snippet in the NatSpec of
+  `ClonesWithImmutableArgs.sol`.
 
 Both paths produce the same proxy runtime, so the same on-implementation
 reader works for either (the original wighawag `Clone.sol` is the canonical
@@ -30,8 +33,10 @@ production at Bunni, Sudoswap, 0xSplits, etc.
   minus proxy logic, minus length suffix).
 - **`clone2` takes `salt` as a parameter.** Upstream hardcoded salt to 0,
   meaning a second deploy with the same `impl` + `data` always reverted.
-- **`addressOfClone2` takes `deployer` as a parameter.** Upstream
-  hardcoded `address(this)`, making prediction-on-behalf impossible.
+- **No on-chain `addressOfClone2`.** Upstream's version hardcoded
+  `address(this)`, making prediction-on-behalf impossible. Here it is a
+  commented-out reference snippet (taking `deployer` as a parameter) in
+  the NatSpec, not live library code.
 - **`implementation == address(0)` check.** Catches a silent-failure
   mode where `DELEGATECALL` to the zero address "succeeds" with empty
   return data.
@@ -68,9 +73,11 @@ address payable instance = ClonesWithImmutableArgs.clone(
 bytes32 salt = keccak256(abi.encode(msg.sender, userSalt));
 address payable det = ClonesWithImmutableArgs.clone2(implementation, salt, data);
 
-// Predict the address without deploying
-address predicted = ClonesWithImmutableArgs.addressOfClone2(
-    address(this), implementation, salt, data
+// Predict the address without deploying (same math as the NatSpec
+// `addressOfClone2` reference snippet; there is no library function for it)
+bytes32 bytecodeHash = keccak256(ClonesWithImmutableArgs.creation(implementation, data));
+address predicted = address(
+    uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash))))
 );
 ```
 

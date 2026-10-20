@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ClonesWithImmutableArgs} from "../src/ClonesWithImmutableArgs.sol";
@@ -105,7 +105,7 @@ contract CloneTest is Test {
         bytes memory data = abi.encodePacked(uint256(42), address(impl));
         bytes32 salt = keccak256("test-salt");
 
-        // CREATE2 prediction via the public `creation` helper; mirrors the
+        // CREATE2 prediction via the internal `creation` helper; mirrors the
         // (commented-out) `addressOfClone2` but keeps it out of audited library code.
         bytes32 bytecodeHash = keccak256(ClonesWithImmutableArgs.creation(address(impl), data));
         address predicted =
