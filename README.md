@@ -93,8 +93,7 @@ contract MyImpl is Clone {
 }
 ```
 
-`Clone.sol` is identical to upstream wighawag minus the unused
-`_getArgUint256Array` — it provides
+`Clone.sol` is byte-identical to upstream wighawag — it provides
 `_getArgUint256` / `_getArgAddress` / `_getArgUint64` / `_getArgUint8`
 helpers.
 

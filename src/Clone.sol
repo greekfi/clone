@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.4;
 
 /// @title Clone
 /// @author zefram.eth
 /// @notice Provides helper functions for reading immutable args from calldata.
-/// @dev    Identical to upstream wighawag/clones-with-immutable-args at
-///         commit 196f1ec, minus the unused `_getArgUint256Array`. Designed
-///         to be inherited by implementations that are cloned via `ClonesWithImmutableArgs` (`clone` or `clone2`).
+/// @dev    Byte-identical to upstream wighawag/clones-with-immutable-args at
+///         commit 196f1ec. Designed to be inherited by implementations that
+///         are cloned via `ClonesWithImmutableArgs` (`clone` or `clone2`).
 contract Clone {
     /// @notice Reads an immutable arg with type address
     /// @param argOffset The offset of the arg in the packed data
@@ -28,6 +28,24 @@ contract Clone {
         assembly {
             arg := calldataload(add(offset, argOffset))
         }
+    }
+
+    /// @notice Reads a uint256 array stored in the immutable args.
+    /// @param argOffset The offset of the arg in the packed data
+    /// @param arrLen Number of elements in the array
+    /// @return arr The array
+    function _getArgUint256Array(uint256 argOffset, uint64 arrLen) internal pure returns (uint256[] memory arr) {
+        uint256 offset = _getImmutableArgsOffset();
+        uint256 el;
+        arr = new uint256[](arrLen);
+        for (uint64 i = 0; i < arrLen; i++) {
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                el := calldataload(add(add(offset, argOffset), mul(i, 32)))
+            }
+            arr[i] = el;
+        }
+        return arr;
     }
 
     /// @notice Reads an immutable arg with type uint64
