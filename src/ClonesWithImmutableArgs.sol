@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
 
 /// @title ClonesWithImmutableArgs
 /// @notice Deploys minimal-proxy clones that forward immutable args to the
@@ -72,9 +72,9 @@ library ClonesWithImmutableArgs {
     /// @notice Builds the creation bytecode shared by `clone` and `clone2`.
     ///         `internal`, so solc inlines it into every importing contract and
     ///         the library stays a pure compile-time dependency — nothing is
-    ///         deployed and nothing is linked. Consumers that want to expose the
-    ///         init code (or its hash) to off-chain callers wrap it in their own
-    ///         public view function; e.g. `Factory.receiptInitCodeHash`.
+    ///         deployed and nothing is linked. A consumer that wants to expose
+    ///         the init code (or its hash) to off-chain callers can wrap it in
+    ///         its own public view function.
     /// @dev    MUST STAY `internal`. Declaring this (or any other function here)
     ///         `public` / `external` turns the library into a separately deployed,
     ///         link-time dependency, and every call to it into a DELEGATECALL that
